@@ -1,0 +1,41 @@
+#!/usr/bin/expect
+
+# setup
+set timeout 1
+expect_before {
+    timeout { puts "FAILED: timeout"; exit 2 }
+    eof     { puts "FAILED: eof";     exit 1 }
+}
+
+# start
+spawn ./rdb
+expect "db>"
+
+send -- ".table\r"
+expect "Unrecognized command '.table'."
+
+send -- "create table foo\r"
+expect "Unrecognized keyword at start of 'create table foo'."
+
+send -- "insert foo\r"
+expect "Syntax error. Could not parse statement."
+
+send -- "insert 1 hoge fuga\r"
+expect "Executed."
+
+send -- "select hoge\r"
+expect "(1, hoge, fuga)"
+
+# 32
+set maxUsername "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+# 255
+set maxEmail "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+send -- "insert 999 $maxUsername $maxEmail\r"
+expect "Executed."
+send -- "select *\r"
+expect "(999, $maxUsername, $maxEmail)"
+
+send -- ".exit\r"
+expect eof
+
+puts "*** SUCCESS - 1 ***"
