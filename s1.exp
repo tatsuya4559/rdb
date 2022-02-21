@@ -35,6 +35,13 @@ expect "Executed."
 send -- "select *\r"
 expect "(999, $maxUsername, $maxEmail)"
 
+# 33
+set overUsername "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+# 255
+set overEmail "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+send -- "insert 1000 $overUsername $overEmail\r"
+expect "String is too long."
+
 send -- ".exit\r"
 expect eof
 
