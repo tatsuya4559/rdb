@@ -56,6 +56,18 @@ func TestInsertAndRetrieveRow(t *testing.T) {
 				"db> ",
 			},
 		},
+		"id is negative": {
+			[]string{
+				"insert -1 foo foo@example.com",
+				"select *",
+				".exit",
+			},
+			[]string{
+				"db> ID must be positive.",
+				"db> Executed.",
+				"db> ",
+			},
+		},
 	}
 
 	for name, tt := range tests {

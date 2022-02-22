@@ -68,8 +68,9 @@ MetaCommandResult do_meta_command(InputBuffer* input_buffer) {
 
 typedef enum {
   PREPARE_SUCCESS,
-  PREPARE_SYNTAX_ERROR,
+  PREPARE_NEGATIVE_ID,
   PREPARE_STRING_TOO_LONG,
+  PREPARE_SYNTAX_ERROR,
   PREPARE_UNRECOGNIZED_STATEMENT,
 } PrepareResult;
 
@@ -168,6 +169,9 @@ PrepareResult prepare_insert(InputBuffer* input_buffer, Statement* stmt) {
     }
 
     int id = atoi(id_string);
+    if (id < 0) {
+      return PREPARE_NEGATIVE_ID;
+    }
     if (strlen(username) > COLUMN_USERNAME_SIZE) {
       return PREPARE_STRING_TOO_LONG;
     }
@@ -246,11 +250,14 @@ int main(int argc, const char **argv) {
     switch (prepare_statement(input_buffer, &stmt)) {
     case PREPARE_SUCCESS:
       break;
-    case PREPARE_SYNTAX_ERROR:
-      printf("Syntax error. Could not parse statement.\n");
+    case PREPARE_NEGATIVE_ID:
+      printf("ID must be positive.\n");
       continue;
     case PREPARE_STRING_TOO_LONG:
       printf("String is too long.\n");
+      continue;
+    case PREPARE_SYNTAX_ERROR:
+      printf("Syntax error. Could not parse statement.\n");
       continue;
     case PREPARE_UNRECOGNIZED_STATEMENT:
       printf("Unrecognized keyword at start of '%s'.\n", input_buffer->buffer);
