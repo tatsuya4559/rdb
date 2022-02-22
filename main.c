@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 
+/* I/O Utility */
 #define die(...) do { fprintf(stderr, __VA_ARGS__); exit(EXIT_FAILURE); } while(0)
 
 typedef struct {
@@ -48,29 +49,7 @@ void close_input_buffer(InputBuffer* input_buffer) {
   free(input_buffer);
 }
 
-typedef enum {
-  EXECUTE_SUCCESS,
-  EXECUTE_TABLE_FULL,
-} ExecuteResult;
-
-typedef enum {
-  META_COMMAND_SUCCESS,
-  META_COMMAND_UNRECOGNIZED_COMMAND,
-} MetaCommandResult;
-
-typedef enum {
-  PREPARE_SUCCESS,
-  PREPARE_NEGATIVE_ID,
-  PREPARE_STRING_TOO_LONG,
-  PREPARE_SYNTAX_ERROR,
-  PREPARE_UNRECOGNIZED_STATEMENT,
-} PrepareResult;
-
-typedef enum {
-  STATEMENT_INSERT,
-  STATEMENT_SELECT,
-} StatementType;
-
+/* Row */
 #define COLUMN_USERNAME_SIZE 32
 #define COLUMN_EMAIL_SIZE 255
 typedef struct {
@@ -82,11 +61,6 @@ typedef struct {
 void print_row(Row* row) {
   printf("(%d, %s, %s)\n", row->id, row->username, row->email);
 }
-
-typedef struct {
-  StatementType type;
-  Row row_to_insert;
-} Statement;
 
 #define size_of_attribute(Struct, Attribute) sizeof(((Struct*)0)->Attribute)
 const uint32_t ID_SIZE = size_of_attribute(Row, id);
@@ -109,6 +83,7 @@ void deserialize_row(void* src, Row* dest) {
   memcpy(&(dest->email), src + EMAIL_OFFSET, EMAIL_SIZE);
 }
 
+/* Pager */
 const uint32_t PAGE_SIZE = 4096;
 #define TABLE_MAX_PAGES 100
 const uint32_t ROWS_PER_PAGE = PAGE_SIZE / ROW_SIZE;
@@ -119,11 +94,6 @@ typedef struct {
   uint32_t file_length;
   void* pages[TABLE_MAX_PAGES];
 } Pager;
-
-typedef struct {
-  uint32_t num_rows;
-  Pager* pager;
-} Table;
 
 Pager* pager_open(const char* filename) {
   int fd = open(filename, O_RDWR | O_CREAT, S_IWUSR | S_IRUSR);
@@ -154,6 +124,37 @@ void pager_flush(Pager* pager, uint32_t page_num, uint32_t size) {
     die("Error writing: %d\n", errno);
   }
 }
+
+void* get_page(Pager* pager, uint32_t page_num) {
+  if (page_num > TABLE_MAX_PAGES) {
+    die("Tried to fetch page number out of bounds. %d > %d\n",
+        page_num, TABLE_MAX_PAGES);
+  }
+
+  if (pager->pages[page_num] == NULL) {
+    // cache miss. allocate memory and load from file.
+    void* page = malloc(PAGE_SIZE);
+    uint32_t num_pages = pager->file_length % PAGE_SIZE == 0 ? // ceil
+      pager->file_length / PAGE_SIZE :
+      (pager->file_length / PAGE_SIZE) + 1;
+
+    if (page_num <= num_pages) {
+      lseek(pager->fd, page_num * PAGE_SIZE, SEEK_SET);
+      if (read(pager->fd, page, PAGE_SIZE) == -1) {
+        die("error reading file: %d\n", errno);
+      }
+    }
+
+    pager->pages[page_num] = page;
+  }
+  return pager->pages[page_num];
+}
+
+/* Table */
+typedef struct {
+  uint32_t num_rows;
+  Pager* pager;
+} Table;
 
 Table* db_open(const char* filename) {
   Pager* pager = pager_open(filename);
@@ -204,31 +205,6 @@ void db_close(Table* table) {
   free(table);
 }
 
-void* get_page(Pager* pager, uint32_t page_num) {
-  if (page_num > TABLE_MAX_PAGES) {
-    die("Tried to fetch page number out of bounds. %d > %d\n",
-        page_num, TABLE_MAX_PAGES);
-  }
-
-  if (pager->pages[page_num] == NULL) {
-    // cache miss. allocate memory and load from file.
-    void* page = malloc(PAGE_SIZE);
-    uint32_t num_pages = pager->file_length % PAGE_SIZE == 0 ? // ceil
-      pager->file_length / PAGE_SIZE :
-      (pager->file_length / PAGE_SIZE) + 1;
-
-    if (page_num <= num_pages) {
-      lseek(pager->fd, page_num * PAGE_SIZE, SEEK_SET);
-      if (read(pager->fd, page, PAGE_SIZE) == -1) {
-        die("error reading file: %d\n", errno);
-      }
-    }
-
-    pager->pages[page_num] = page;
-  }
-  return pager->pages[page_num];
-}
-
 // returns pointer for start of given row num
 void* row_slot(Table* table, uint32_t row_num) {
   uint32_t page_num = row_num / ROWS_PER_PAGE;
@@ -237,6 +213,26 @@ void* row_slot(Table* table, uint32_t row_num) {
   uint32_t byte_offset = row_offset * ROW_SIZE;
   return page + byte_offset;
 }
+
+/* Statement */
+typedef enum {
+  STATEMENT_INSERT,
+  STATEMENT_SELECT,
+} StatementType;
+
+typedef struct {
+  StatementType type;
+  Row row_to_insert;
+} Statement;
+
+/* Parse statement */
+typedef enum {
+  PREPARE_SUCCESS,
+  PREPARE_NEGATIVE_ID,
+  PREPARE_STRING_TOO_LONG,
+  PREPARE_SYNTAX_ERROR,
+  PREPARE_UNRECOGNIZED_STATEMENT,
+} PrepareResult;
 
 PrepareResult prepare_insert(InputBuffer* input_buffer, Statement* stmt) {
     stmt->type = STATEMENT_INSERT;
@@ -280,6 +276,12 @@ PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* stmt) {
   return PREPARE_UNRECOGNIZED_STATEMENT;
 }
 
+/* Execute statement */
+typedef enum {
+  EXECUTE_SUCCESS,
+  EXECUTE_TABLE_FULL,
+} ExecuteResult;
+
 ExecuteResult execute_insert(Statement* stmt, Table* table) {
   if (table->num_rows >= TABLE_MAX_ROWS) {
     return EXECUTE_TABLE_FULL;
@@ -310,6 +312,12 @@ ExecuteResult execute_statement(Statement* stmt, Table* table) {
   }
 }
 
+/* Meta command */
+typedef enum {
+  META_COMMAND_SUCCESS,
+  META_COMMAND_UNRECOGNIZED_COMMAND,
+} MetaCommandResult;
+
 MetaCommandResult do_meta_command(InputBuffer* input_buffer, Table* table) {
   if (strcmp(input_buffer->buffer, ".exit") == 0) {
     db_close(table);
@@ -319,6 +327,7 @@ MetaCommandResult do_meta_command(InputBuffer* input_buffer, Table* table) {
   return META_COMMAND_UNRECOGNIZED_COMMAND;
 }
 
+/* main */
 int main(int argc, char* argv[]) {
   if (argc < 2) {
     die("Must supply a database filename.\n");
