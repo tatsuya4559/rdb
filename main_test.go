@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"strings"
 	"testing"
@@ -75,6 +76,7 @@ func TestInsertAndRetrieveRow(t *testing.T) {
 		if diff := cmp.Diff(got, tt.want); diff != "" {
 			t.Errorf("failed in case %q: %v", name, diff)
 		}
+		cleanDBFile(t)
 	}
 }
 
@@ -91,12 +93,20 @@ func TestTableIsFull(t *testing.T) {
 	if got[len(got)-2] != want {
 		t.Errorf("want %q, but got %q", want, got[len(got)-2])
 	}
+	cleanDBFile(t)
+}
+
+func cleanDBFile(t *testing.T) {
+	t.Helper()
+	if err := os.Remove("test.db"); err != nil {
+		t.Fatalf("failed to remove test.db: %v", err)
+	}
 }
 
 func runRDB(t *testing.T, inputs []string) []string {
 	t.Helper()
 
-	cmd := exec.Command("./rdb")
+	cmd := exec.Command("./rdb", "test.db")
 	stdinPipe, _ := cmd.StdinPipe()
 
 	go func() {
