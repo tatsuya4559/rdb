@@ -85,7 +85,7 @@ func TestInsertAndRetrieveRow(t *testing.T) {
 				"db> ",
 			},
 		},
-		"allows printing out the structure of a one-node btree": {
+		"inserted in sorted order": {
 			[]string{
 				"insert 3 user3 user3@example.com",
 				"insert 1 user1 user1@example.com",
@@ -99,9 +99,24 @@ func TestInsertAndRetrieveRow(t *testing.T) {
 				"db> Executed.",
 				"db> Tree:",
 				"leaf (size 3)",
-				"  - 0 : 3",
-				"  - 1 : 1",
-				"  - 2 : 2",
+				"  - 0 : 1",
+				"  - 1 : 2",
+				"  - 2 : 3",
+				"db> ",
+			},
+		},
+		"duplicate id error": {
+			[]string{
+				"insert 1 user1 user1@example.com",
+				"insert 1 user2 user2@example.com",
+				"select",
+				".exit",
+			},
+			[]string{
+				"db> Executed.",
+				"db> Error: Duplicate key.",
+				"db> (1, user1, user1@example.com)",
+				"Executed.",
 				"db> ",
 			},
 		},
