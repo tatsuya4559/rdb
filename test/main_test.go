@@ -157,7 +157,7 @@ func cleanDBFile(t *testing.T) {
 func runRDB(t *testing.T, inputs []string) []string {
 	t.Helper()
 
-	cmd := exec.Command("./rdb", "test.db")
+	cmd := exec.Command("../rdb", "test.db")
 	stdinPipe, _ := cmd.StdinPipe()
 
 	go func() {
