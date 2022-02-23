@@ -85,12 +85,32 @@ func TestInsertAndRetrieveRow(t *testing.T) {
 				"db> ",
 			},
 		},
+		"allows printing out the structure of a one-node btree": {
+			[]string{
+				"insert 3 user3 user3@example.com",
+				"insert 1 user1 user1@example.com",
+				"insert 2 user2 user2@example.com",
+				".btree",
+				".exit",
+			},
+			[]string{
+				"db> Executed.",
+				"db> Executed.",
+				"db> Executed.",
+				"db> Tree:",
+				"leaf (size 3)",
+				"  - 0 : 3",
+				"  - 1 : 1",
+				"  - 2 : 2",
+				"db> ",
+			},
+		},
 	}
 
 	for name, tt := range tests {
 		got := runRDB(t, tt.inputs)
 		if diff := cmp.Diff(got, tt.want); diff != "" {
-			t.Errorf("failed in case %q: %v", name, diff)
+			t.Errorf("failed in case %q (-got +want): %v", name, diff)
 		}
 		cleanDBFile(t)
 	}
