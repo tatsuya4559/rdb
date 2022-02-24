@@ -56,7 +56,7 @@ typedef struct {
   char email[COLUMN_EMAIL_SIZE+1];
 } Row;
 
-void print_row(Row* row) {
+void print_row(const Row* row) {
   printf("(%d, %s, %s)\n", row->id, row->username, row->email);
 }
 
@@ -69,13 +69,13 @@ const uint32_t USERNAME_OFFSET = ID_OFFSET + ID_SIZE;
 const uint32_t EMAIL_OFFSET = USERNAME_OFFSET + USERNAME_SIZE;
 const uint32_t ROW_SIZE = ID_SIZE + USERNAME_SIZE + EMAIL_SIZE;
 
-void serialize_row(Row* src, void* dest) {
+void serialize_row(const Row* src, void* dest) {
   memcpy(dest + ID_OFFSET, &(src->id), ID_SIZE);
   strncpy(dest + USERNAME_OFFSET, src->username, USERNAME_SIZE);
   strncpy(dest + EMAIL_OFFSET, src->email, EMAIL_SIZE);
 }
 
-void deserialize_row(void* src, Row* dest) {
+void deserialize_row(const void* src, Row* dest) {
   memcpy(&(dest->id), src + ID_OFFSET, ID_SIZE);
   memcpy(&(dest->username), src + USERNAME_OFFSET, USERNAME_SIZE);
   memcpy(&(dest->email), src + EMAIL_OFFSET, EMAIL_SIZE);
