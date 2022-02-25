@@ -17,6 +17,9 @@ typedef struct {
 
 InputBuffer* new_input_buffer() {
   InputBuffer* input_buffer = (InputBuffer*)malloc(sizeof(InputBuffer));
+  if (input_buffer == NULL) {
+    die("cannot alloc input_buffer.\n");
+  }
   input_buffer->buffer = NULL;
   input_buffer->buffer_length = 0;
   input_buffer->input_length = 0;
@@ -99,6 +102,9 @@ Pager* pager_open(const char* filename) {
   }
 
   Pager* pager = malloc(sizeof(Pager));
+  if (pager == NULL) {
+    die("cannot alloc pager.\n");
+  }
   pager->fd = fd;
   uint32_t file_length = lseek(fd, 0, SEEK_END);
   pager->file_length = file_length;
@@ -138,6 +144,9 @@ void* get_page(Pager* pager, uint32_t page_num) {
   if (pager->pages[page_num] == NULL) {
     // cache miss. allocate memory and load from file.
     void* page = malloc(PAGE_SIZE);
+    if (page == NULL) {
+      die("cannot alloc page.\n");
+    }
     uint32_t num_pages = pager->file_length % PAGE_SIZE == 0 ? // ceil
       pager->file_length / PAGE_SIZE :
       (pager->file_length / PAGE_SIZE) + 1;
@@ -227,6 +236,9 @@ Table* db_open(const char* filename) {
   Pager* pager = pager_open(filename);
 
   Table* table = malloc(sizeof(Table));
+  if (table == NULL) {
+    die("cannot alloc table.\n");
+  }
   table->pager = pager;
   table->root_page_num = 0;
 
@@ -275,6 +287,9 @@ typedef struct {
 
 Cursor* table_start(Table* table) {
   Cursor* cursor = malloc(sizeof(Cursor));
+  if (cursor == NULL) {
+    die("cannot alloc cursor.\n");
+  }
   cursor->table = table;
   cursor->page_num = table->root_page_num;
   cursor->cell_num = 0;
@@ -289,6 +304,9 @@ Cursor* leaf_node_find(Table* table, uint32_t page_num, uint32_t key) {
   uint32_t num_cells = *leaf_node_num_cells(node);
 
   Cursor* cursor = malloc(sizeof(Cursor));
+  if (cursor == NULL) {
+    die("cannot alloc cursor.\n");
+  }
   cursor->table = table;
   cursor->page_num = page_num;
 
