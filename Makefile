@@ -1,7 +1,7 @@
-rdb: src/main.c
-	gcc -Wall -o rdb src/main.c
+rdb:
+	go build -o rdb ./...
 
-test: rdb
-	cd test; go test main_test.go
+test:
+	go test -v ./...
 
-.PHONY: test
+.PHONY: rdb test

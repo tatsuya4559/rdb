@@ -69,57 +69,59 @@ func TestInsertAndRetrieveRow(t *testing.T) {
 				"db> ",
 			},
 		},
-		"print contants": {
-			[]string{
-				".constants",
-				".exit",
+		/*
+			"print contants": {
+				[]string{
+					".constants",
+					".exit",
+				},
+				[]string{
+					"db> Constants:",
+					"ROW_SIZE: 293",
+					"COMMON_NODE_HEADER_SIZE: 6",
+					"LEAF_NODE_HEADER_SIZE: 10",
+					"LEAF_NODE_CELL_SIZE: 297",
+					"LEAF_NODE_SPACE_FOR_CELLS: 4086",
+					"LEAF_NODE_MAX_CELLS: 13",
+					"db> ",
+				},
 			},
-			[]string{
-				"db> Constants:",
-				"ROW_SIZE: 293",
-				"COMMON_NODE_HEADER_SIZE: 6",
-				"LEAF_NODE_HEADER_SIZE: 10",
-				"LEAF_NODE_CELL_SIZE: 297",
-				"LEAF_NODE_SPACE_FOR_CELLS: 4086",
-				"LEAF_NODE_MAX_CELLS: 13",
-				"db> ",
+			"inserted in sorted order": {
+				[]string{
+					"insert 3 user3 user3@example.com",
+					"insert 1 user1 user1@example.com",
+					"insert 2 user2 user2@example.com",
+					".btree",
+					".exit",
+				},
+				[]string{
+					"db> Executed.",
+					"db> Executed.",
+					"db> Executed.",
+					"db> Tree:",
+					"leaf (size 3)",
+					"  - 0 : 1",
+					"  - 1 : 2",
+					"  - 2 : 3",
+					"db> ",
+				},
 			},
-		},
-		"inserted in sorted order": {
-			[]string{
-				"insert 3 user3 user3@example.com",
-				"insert 1 user1 user1@example.com",
-				"insert 2 user2 user2@example.com",
-				".btree",
-				".exit",
+			"duplicate id error": {
+				[]string{
+					"insert 1 user1 user1@example.com",
+					"insert 1 user2 user2@example.com",
+					"select",
+					".exit",
+				},
+				[]string{
+					"db> Executed.",
+					"db> Error: Duplicate key.",
+					"db> (1, user1, user1@example.com)",
+					"Executed.",
+					"db> ",
+				},
 			},
-			[]string{
-				"db> Executed.",
-				"db> Executed.",
-				"db> Executed.",
-				"db> Tree:",
-				"leaf (size 3)",
-				"  - 0 : 1",
-				"  - 1 : 2",
-				"  - 2 : 3",
-				"db> ",
-			},
-		},
-		"duplicate id error": {
-			[]string{
-				"insert 1 user1 user1@example.com",
-				"insert 1 user2 user2@example.com",
-				"select",
-				".exit",
-			},
-			[]string{
-				"db> Executed.",
-				"db> Error: Duplicate key.",
-				"db> (1, user1, user1@example.com)",
-				"Executed.",
-				"db> ",
-			},
-		},
+		*/
 	}
 
 	for name, tt := range tests {
@@ -127,13 +129,13 @@ func TestInsertAndRetrieveRow(t *testing.T) {
 		if diff := cmp.Diff(got, tt.want); diff != "" {
 			t.Errorf("failed in case %q (-got +want): %v", name, diff)
 		}
-		cleanDBFile(t)
+		// cleanDBFile(t)
 	}
 }
 
 func TestTableIsFull(t *testing.T) {
 	var inputs []string
-	for i := 0; i < 1400; i++ {
+	for i := 0; i < 1401; i++ {
 		inputs = append(inputs, fmt.Sprintf("insert %[1]d user%[1]d user%[1]d@example.com", i))
 	}
 	inputs = append(inputs, ".exit")
@@ -144,7 +146,7 @@ func TestTableIsFull(t *testing.T) {
 	if got[len(got)-2] != want {
 		t.Errorf("want %q, but got %q", want, got[len(got)-2])
 	}
-	cleanDBFile(t)
+	// cleanDBFile(t)
 }
 
 func cleanDBFile(t *testing.T) {
@@ -157,7 +159,7 @@ func cleanDBFile(t *testing.T) {
 func runRDB(t *testing.T, inputs []string) []string {
 	t.Helper()
 
-	cmd := exec.Command("../rdb", "test.db")
+	cmd := exec.Command("./rdb", "test.db")
 	stdinPipe, _ := cmd.StdinPipe()
 
 	go func() {
