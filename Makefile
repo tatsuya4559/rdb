@@ -1,5 +1,5 @@
 rdb:
-	go build -o rdb ./...
+	go build -o rdb
 
 test:
 	go test -v ./...

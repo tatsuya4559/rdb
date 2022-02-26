@@ -3,7 +3,15 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
+
+	"github.com/tatsuya4559/build-my-own-x/rdb/backend"
 )
+
+func assert(cond bool) {
+	if !cond {
+		panic("assertion error")
+	}
+}
 
 type buffer struct {
 	buf []byte
@@ -20,8 +28,10 @@ func (b *buffer) Read(p []byte) (n int, err error) {
 	return len(b.buf), nil
 }
 
-const COLUMN_USERNAME_SIZE = 32
-const COLUMN_EMAIL_SIZE = 255
+const (
+	COLUMN_USERNAME_SIZE = 32
+	COLUMN_EMAIL_SIZE    = 255
+)
 
 type Row struct {
 	ID       uint32
@@ -60,4 +70,16 @@ func DeserializeRow(p []byte, row *Row) {
 	binary.Read(buf, binary.BigEndian, row)
 }
 
-var ROW_SIZE = binary.Size(Row{})
+var (
+	ROW_SIZE       = binary.Size(Row{})
+	ROWS_PER_PAGE  = backend.PAGE_SIZE / ROW_SIZE
+	TABLE_MAX_ROWS = ROWS_PER_PAGE * backend.TABLE_MAX_PAGES
+)
+
+func GetRowSlot(t *backend.Table, rowNum int) []byte {
+	pageNum := rowNum / ROWS_PER_PAGE
+	p := t.Pages[pageNum]
+	rowOffset := rowNum % ROWS_PER_PAGE
+	byteOffset := rowOffset * ROW_SIZE
+	return p[byteOffset : byteOffset+ROW_SIZE]
+}

@@ -8,10 +8,12 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/tatsuya4559/build-my-own-x/rdb/backend"
 )
 
 func main() {
-	table := NewTable()
+	table := backend.NewTable()
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
@@ -23,9 +25,9 @@ func main() {
 
 		if line == ".debug" {
 			fmt.Println(binary.Size(Row{}))
-			fmt.Println(table.pages[0])
+			fmt.Println(table.Pages[0])
 			var row Row
-			DeserializeRow(table.pages[0][:ROW_SIZE], &row)
+			DeserializeRow(table.Pages[0][:ROW_SIZE], &row)
 			fmt.Println(row.String())
 			fmt.Println("TABLE_MAX_ROWS: ", TABLE_MAX_ROWS)
 			continue
@@ -130,32 +132,26 @@ var (
 	ErrExecuteTableFull = errors.New("Error: Table full.")
 )
 
-func assert(cond bool) {
-	if !cond {
-		panic("assertion error")
-	}
-}
-
-func executeInsert(stmt *Statement, table *Table) error {
-	if table.numRows >= TABLE_MAX_ROWS {
+func executeInsert(stmt *Statement, table *backend.Table) error {
+	if table.NumRows >= TABLE_MAX_ROWS {
 		return ErrExecuteTableFull
 	}
 
-	SerializeRow(stmt.rowToInsert, table.GetRowSlot(table.numRows))
-	table.numRows++
+	SerializeRow(stmt.rowToInsert, GetRowSlot(table, table.NumRows))
+	table.NumRows++
 	return nil
 }
 
-func executeSelect(stmt *Statement, table *Table) error {
+func executeSelect(stmt *Statement, table *backend.Table) error {
 	var row Row
-	for i := 0; i < table.numRows; i++ {
-		DeserializeRow(table.GetRowSlot(i), &row)
+	for i := 0; i < table.NumRows; i++ {
+		DeserializeRow(GetRowSlot(table, i), &row)
 		fmt.Println(row.String())
 	}
 	return nil
 }
 
-func executeStatement(stmt *Statement, table *Table) error {
+func executeStatement(stmt *Statement, table *backend.Table) error {
 	switch stmt.Type {
 	case StatementTypeInsert:
 		return executeInsert(stmt, table)
