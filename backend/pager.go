@@ -14,7 +14,7 @@ type pager struct {
 }
 
 func openPager(filename string) *pager {
-	file, err := os.OpenFile(filename, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0600)
+	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		log.Fatalf("Unable to open file.")
 	}
