@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"log"
@@ -19,6 +18,7 @@ func main() {
 	}
 	filename := os.Args[1]
 	table := backend.OpenDB(filename)
+	defer table.Close()
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
@@ -29,12 +29,6 @@ func main() {
 		line := scanner.Text()
 
 		if line == ".debug" {
-			fmt.Println(binary.Size(backend.Row{}))
-			fmt.Println(table.Pager.Pages[0])
-			var row backend.Row
-			backend.DeserializeRow(table.Pager.Pages[0][:backend.ROW_SIZE], &row)
-			fmt.Println(row.String())
-			fmt.Println("TABLE_MAX_ROWS: ", backend.TABLE_MAX_ROWS)
 			continue
 		}
 		if strings.HasPrefix(line, ".") {
@@ -104,10 +98,10 @@ func prepareInsert(line string) (*Statement, error) {
 	if id < 0 {
 		return nil, ErrPrepareNegativeID
 	}
-	if len(username) > backend.COLUMN_USERNAME_SIZE {
+	if len(username) > backend.ColumnUsernameSize {
 		return nil, ErrPrepareStringTooLong
 	}
-	if len(email) > backend.COLUMN_EMAIL_SIZE {
+	if len(email) > backend.ColumnEmailSize {
 		return nil, ErrPrepareStringTooLong
 	}
 
@@ -138,11 +132,11 @@ var (
 )
 
 func executeInsert(stmt *Statement, table *backend.Table) error {
-	if table.NumRows >= backend.TABLE_MAX_ROWS {
+	if table.NumRows >= backend.TableMaxRows {
 		return ErrExecuteTableFull
 	}
 
-	backend.SerializeRow(stmt.rowToInsert, backend.GetRowSlot(table, table.NumRows))
+	backend.SerializeRow(stmt.rowToInsert, table.GetRowSlot(table.NumRows))
 	table.NumRows++
 	return nil
 }
@@ -150,7 +144,7 @@ func executeInsert(stmt *Statement, table *backend.Table) error {
 func executeSelect(stmt *Statement, table *backend.Table) error {
 	var row backend.Row
 	for i := 0; i < table.NumRows; i++ {
-		backend.DeserializeRow(backend.GetRowSlot(table, i), &row)
+		backend.DeserializeRow(table.GetRowSlot(i), &row)
 		fmt.Println(row.String())
 	}
 	return nil
