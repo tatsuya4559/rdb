@@ -32,11 +32,16 @@ func openPager(filename string) *pager {
 	return p
 }
 
-func (p *pager) flush(pageNum, size int) {
+func (p *pager) close() error {
+	return p.file.Close()
+}
+
+func (p *pager) flush(pageNum int64, size int) {
 	if p.pages[pageNum] == nil {
-		log.Fatalf("Tried to flush null page.")
+		// Tried to flush null page
+		return
 	}
-	if _, err := p.file.Seek(int64(pageNum*pageSize), os.SEEK_SET); err != nil {
+	if _, err := p.file.Seek(pageNum*pageSize, os.SEEK_SET); err != nil {
 		log.Fatalf("Error seeking: %v", err)
 	}
 
@@ -45,7 +50,7 @@ func (p *pager) flush(pageNum, size int) {
 	}
 }
 
-func (p *pager) getPage(pageNum int) []byte {
+func (p *pager) getPage(pageNum int64) []byte {
 	page := p.pages[pageNum]
 	// Cache miss.
 	if page == nil {
@@ -57,8 +62,8 @@ func (p *pager) getPage(pageNum int) []byte {
 		if p.fileLength%pageSize != 0 {
 			numPages++
 		}
-		if int64(pageNum) <= numPages {
-			p.file.Seek(int64(pageNum)*pageSize, os.SEEK_SET)
+		if pageNum <= numPages {
+			p.file.Seek(pageNum*pageSize, os.SEEK_SET)
 			if _, err := p.file.Read(page); err != nil && !errors.Is(err, io.EOF) {
 				log.Fatalf("Error reading file: %v", err)
 			}

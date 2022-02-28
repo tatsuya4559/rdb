@@ -21,21 +21,16 @@ func (t *Table) Close() {
 	numFullPages := t.NumRows / rowsPerPage
 
 	for i := 0; i < numFullPages; i++ {
-		if t.pager.pages[i] == nil {
-			continue
-		}
-		t.pager.flush(i, pageSize)
+		t.pager.flush(int64(i), pageSize)
 	}
 
 	numAdditionalRows := t.NumRows % rowsPerPage
 	if numAdditionalRows > 0 {
 		pageNum := numFullPages
-		if t.pager.pages[pageNum] != nil {
-			t.pager.flush(pageNum, numAdditionalRows*rowSize)
-		}
+		t.pager.flush(int64(pageNum), numAdditionalRows*rowSize)
 	}
 
-	if err := t.pager.file.Close(); err != nil {
+	if err := t.pager.close(); err != nil {
 		log.Fatalf("Error closing db file.")
 	}
 }
@@ -44,7 +39,7 @@ func (t *Table) GetPage(pageNum int) []byte {
 	if pageNum > tableMaxPages {
 		log.Fatalf("Tried to fetch page number out of bounds. %d > %d", pageNum, tableMaxPages)
 	}
-	return t.pager.getPage(pageNum)
+	return t.pager.getPage(int64(pageNum))
 }
 
 func (t *Table) GetRowSlot(rowNum int) []byte {
