@@ -35,6 +35,10 @@ func (t *Table) Close() {
 	}
 }
 
+func (t *Table) IsFull() bool {
+	return t.NumRows >= TableMaxRows
+}
+
 func (t *Table) GetPage(pageNum int) []byte {
 	if pageNum > tableMaxPages {
 		log.Fatalf("Tried to fetch page number out of bounds. %d > %d", pageNum, tableMaxPages)

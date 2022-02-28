@@ -131,7 +131,7 @@ var (
 )
 
 func executeInsert(stmt *Statement, table *backend.Table) error {
-	if table.NumRows >= backend.TableMaxRows {
+	if table.IsFull() {
 		return ErrExecuteTableFull
 	}
 
