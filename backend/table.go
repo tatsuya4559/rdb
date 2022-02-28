@@ -40,7 +40,7 @@ func (t *Table) Close() {
 	}
 }
 
-func (t *Table) GetPage(pageNum int) Page {
+func (t *Table) GetPage(pageNum int) []byte {
 	if pageNum > tableMaxPages {
 		log.Fatalf("Tried to fetch page number out of bounds. %d > %d", pageNum, tableMaxPages)
 	}

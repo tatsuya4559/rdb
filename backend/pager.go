@@ -7,13 +7,10 @@ import (
 	"os"
 )
 
-// TODO: use new type
-type Page = []byte
-
 type pager struct {
 	file       *os.File
 	fileLength int64
-	pages      [tableMaxPages]Page
+	pages      [tableMaxPages][]byte
 }
 
 func openPager(filename string) *pager {
@@ -48,7 +45,7 @@ func (p *pager) flush(pageNum, size int) {
 	}
 }
 
-func (p *pager) getPage(pageNum int) Page {
+func (p *pager) getPage(pageNum int) []byte {
 	page := p.pages[pageNum]
 	// Cache miss.
 	if page == nil {
