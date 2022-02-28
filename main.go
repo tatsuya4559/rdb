@@ -24,24 +24,23 @@ func main() {
 	for {
 		fmt.Print("db> ")
 		if !scanner.Scan() {
-			os.Exit(0)
+			break
 		}
 		line := scanner.Text()
 
-		if line == ".debug" {
-			continue
-		}
 		if strings.HasPrefix(line, ".") {
 			if err := doMetaCommand(line, table); err != nil {
 				fmt.Println(err)
 			}
 			continue
 		}
+
 		stmt, err := prepareStatement(line)
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
+
 		if err := executeStatement(stmt, table); err != nil {
 			fmt.Println(err)
 			continue
