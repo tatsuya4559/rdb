@@ -2,6 +2,7 @@ package backend
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 )
 
@@ -19,6 +20,11 @@ func (b *buffer) Read(p []byte) (n int, err error) {
 	return len(b.buf), nil
 }
 
+var (
+	ErrRowNegativeID    = errors.New("ID must be positive.")
+	ErrRowStringTooLong = errors.New("String is too long.")
+)
+
 type Row struct {
 	ID       uint32
 	Username [ColumnUsernameSize]byte
@@ -32,18 +38,28 @@ func (r *Row) String() string {
 		cstring(r.Email[:]))
 }
 
-func (r *Row) SetUsername(username string) {
-	if len(username) > ColumnUsernameSize {
-		panic("username over")
+func (r *Row) SetID(id int) error {
+	if id < 0 {
+		return ErrRowNegativeID
 	}
-	copy(r.Username[:], []byte(username))
+	r.ID = uint32(id)
+	return nil
 }
 
-func (r *Row) SetEmail(email string) {
+func (r *Row) SetUsername(username string) error {
+	if len(username) > ColumnUsernameSize {
+		return ErrRowStringTooLong
+	}
+	copy(r.Username[:], []byte(username))
+	return nil
+}
+
+func (r *Row) SetEmail(email string) error {
 	if len(email) > ColumnEmailSize {
-		panic("email over")
+		return ErrRowStringTooLong
 	}
 	copy(r.Email[:], []byte(email))
+	return nil
 }
 
 func SerializeRow(row *Row, p []byte) {

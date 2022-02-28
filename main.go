@@ -94,20 +94,17 @@ func prepareInsert(line string) (*Statement, error) {
 	if err != nil {
 		return nil, ErrPrepareSyntax
 	}
-	if id < 0 {
-		return nil, ErrPrepareNegativeID
-	}
-	if len(username) > backend.ColumnUsernameSize {
-		return nil, ErrPrepareStringTooLong
-	}
-	if len(email) > backend.ColumnEmailSize {
-		return nil, ErrPrepareStringTooLong
-	}
 
 	var row backend.Row
-	row.ID = uint32(id)
-	row.SetUsername(username)
-	row.SetEmail(email)
+	if err := row.SetID(id); err != nil {
+		return nil, ErrPrepareNegativeID
+	}
+	if err := row.SetUsername(username); err != nil {
+		return nil, ErrPrepareStringTooLong
+	}
+	if err := row.SetEmail(email); err != nil {
+		return nil, ErrPrepareStringTooLong
+	}
 
 	stmt.rowToInsert = &row
 

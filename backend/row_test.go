@@ -8,7 +8,7 @@ import (
 
 func TestSerializeDeserialize(t *testing.T) {
 	var originalRow Row
-	originalRow.ID = 100
+	originalRow.SetID(100)
 	originalRow.SetUsername("Foo")
 	originalRow.SetEmail("foo@example.com")
 
