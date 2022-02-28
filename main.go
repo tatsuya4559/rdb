@@ -132,16 +132,20 @@ func executeInsert(stmt *Statement, table *backend.Table) error {
 		return ErrExecuteTableFull
 	}
 
-	backend.SerializeRow(stmt.rowToInsert, table.GetRowSlot(table.NumRows))
+	cursor := backend.TableEnd(table)
+	backend.SerializeRow(stmt.rowToInsert, cursor.GetValue())
 	table.NumRows++
 	return nil
 }
 
 func executeSelect(stmt *Statement, table *backend.Table) error {
+	cursor := backend.TableStart(table)
+
 	var row backend.Row
-	for i := 0; i < table.NumRows; i++ {
-		backend.DeserializeRow(table.GetRowSlot(i), &row)
+	for !cursor.EndOfTable {
+		backend.DeserializeRow(cursor.GetValue(), &row)
 		fmt.Println(row.String())
+		cursor.Advance()
 	}
 	return nil
 }

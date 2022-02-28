@@ -45,11 +45,3 @@ func (t *Table) GetPage(pageNum int) []byte {
 	}
 	return t.pager.getPage(int64(pageNum))
 }
-
-func (t *Table) GetRowSlot(rowNum int) []byte {
-	pageNum := rowNum / rowsPerPage
-	p := t.GetPage(pageNum)
-	rowOffset := rowNum % rowsPerPage
-	byteOffset := rowOffset * rowSize
-	return p[byteOffset : byteOffset+rowSize]
-}
