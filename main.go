@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -13,7 +14,11 @@ import (
 )
 
 func main() {
-	table := backend.NewTable()
+	if len(os.Args) < 2 {
+		log.Fatalf("Must supply a database filename.")
+	}
+	filename := os.Args[1]
+	table := backend.OpenDB(filename)
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
@@ -24,16 +29,16 @@ func main() {
 		line := scanner.Text()
 
 		if line == ".debug" {
-			fmt.Println(binary.Size(Row{}))
-			fmt.Println(table.Pages[0])
-			var row Row
-			DeserializeRow(table.Pages[0][:ROW_SIZE], &row)
+			fmt.Println(binary.Size(backend.Row{}))
+			fmt.Println(table.Pager.Pages[0])
+			var row backend.Row
+			backend.DeserializeRow(table.Pager.Pages[0][:backend.ROW_SIZE], &row)
 			fmt.Println(row.String())
-			fmt.Println("TABLE_MAX_ROWS: ", TABLE_MAX_ROWS)
+			fmt.Println("TABLE_MAX_ROWS: ", backend.TABLE_MAX_ROWS)
 			continue
 		}
 		if strings.HasPrefix(line, ".") {
-			if err := doMetaCommand(line); err != nil {
+			if err := doMetaCommand(line, table); err != nil {
 				fmt.Println(err)
 			}
 			continue
@@ -60,7 +65,7 @@ const (
 
 type Statement struct {
 	Type        StatementType
-	rowToInsert *Row
+	rowToInsert *backend.Row
 }
 
 var (
@@ -99,14 +104,14 @@ func prepareInsert(line string) (*Statement, error) {
 	if id < 0 {
 		return nil, ErrPrepareNegativeID
 	}
-	if len(username) > COLUMN_USERNAME_SIZE {
+	if len(username) > backend.COLUMN_USERNAME_SIZE {
 		return nil, ErrPrepareStringTooLong
 	}
-	if len(email) > COLUMN_EMAIL_SIZE {
+	if len(email) > backend.COLUMN_EMAIL_SIZE {
 		return nil, ErrPrepareStringTooLong
 	}
 
-	var row Row
+	var row backend.Row
 	row.ID = uint32(id)
 	row.SetUsername(username)
 	row.SetEmail(email)
@@ -133,19 +138,19 @@ var (
 )
 
 func executeInsert(stmt *Statement, table *backend.Table) error {
-	if table.NumRows >= TABLE_MAX_ROWS {
+	if table.NumRows >= backend.TABLE_MAX_ROWS {
 		return ErrExecuteTableFull
 	}
 
-	SerializeRow(stmt.rowToInsert, GetRowSlot(table, table.NumRows))
+	backend.SerializeRow(stmt.rowToInsert, backend.GetRowSlot(table, table.NumRows))
 	table.NumRows++
 	return nil
 }
 
 func executeSelect(stmt *Statement, table *backend.Table) error {
-	var row Row
+	var row backend.Row
 	for i := 0; i < table.NumRows; i++ {
-		DeserializeRow(GetRowSlot(table, i), &row)
+		backend.DeserializeRow(backend.GetRowSlot(table, i), &row)
 		fmt.Println(row.String())
 	}
 	return nil

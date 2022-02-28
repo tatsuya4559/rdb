@@ -1,10 +1,9 @@
-package main
+package backend
 
 import (
 	"encoding/binary"
 	"fmt"
-
-	"github.com/tatsuya4559/build-my-own-x/rdb/backend"
+	"log"
 )
 
 func assert(cond bool) {
@@ -18,20 +17,15 @@ type buffer struct {
 }
 
 func (b *buffer) Write(p []byte) (n int, err error) {
-	assert(len(p) == len(b.buf))
+	// assert(len(p) == len(b.buf))
 	copy(b.buf, p)
 	return len(p), nil
 }
 func (b *buffer) Read(p []byte) (n int, err error) {
-	assert(len(p) == len(b.buf))
+	// assert(len(p) == len(b.buf))
 	copy(p, b.buf)
 	return len(b.buf), nil
 }
-
-const (
-	COLUMN_USERNAME_SIZE = 32
-	COLUMN_EMAIL_SIZE    = 255
-)
 
 type Row struct {
 	ID       uint32
@@ -61,8 +55,11 @@ func (r *Row) SetEmail(email string) {
 }
 
 func SerializeRow(row *Row, p []byte) {
+	log.Printf("row to insert is %v, size = %d\n", row, binary.Size(row))
+	log.Printf("slot bytes is %v, size = %d\n", p, len(p))
 	buf := &buffer{p}
 	binary.Write(buf, binary.BigEndian, row)
+	log.Printf("written bytes: %v\n", p)
 }
 
 func DeserializeRow(p []byte, row *Row) {
@@ -70,15 +67,9 @@ func DeserializeRow(p []byte, row *Row) {
 	binary.Read(buf, binary.BigEndian, row)
 }
 
-var (
-	ROW_SIZE       = binary.Size(Row{})
-	ROWS_PER_PAGE  = backend.PAGE_SIZE / ROW_SIZE
-	TABLE_MAX_ROWS = ROWS_PER_PAGE * backend.TABLE_MAX_PAGES
-)
-
-func GetRowSlot(t *backend.Table, rowNum int) []byte {
+func GetRowSlot(t *Table, rowNum int) []byte {
 	pageNum := rowNum / ROWS_PER_PAGE
-	p := t.Pages[pageNum]
+	p := t.GetPage(pageNum)
 	rowOffset := rowNum % ROWS_PER_PAGE
 	byteOffset := rowOffset * ROW_SIZE
 	return p[byteOffset : byteOffset+ROW_SIZE]
