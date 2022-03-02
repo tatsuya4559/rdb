@@ -5,7 +5,7 @@ import (
 )
 
 type Table struct {
-	NumRows int
+	RootPageNum int
 	pager   *pager
 }
 
@@ -18,16 +18,8 @@ func OpenDB(filename string) *Table {
 }
 
 func (t *Table) Close() {
-	numFullPages := t.NumRows / rowsPerPage
-
-	for i := 0; i < numFullPages; i++ {
-		t.pager.flush(int64(i), pageSize)
-	}
-
-	numAdditionalRows := t.NumRows % rowsPerPage
-	if numAdditionalRows > 0 {
-		pageNum := numFullPages
-		t.pager.flush(int64(pageNum), numAdditionalRows*rowSize)
+	for i := 0; i < t.pager.numPages; i++ {
+		t.pager.flush(int64(i))
 	}
 
 	if err := t.pager.close(); err != nil {
@@ -43,5 +35,5 @@ func (t *Table) GetPage(pageNum int) []byte {
 	if pageNum > tableMaxPages {
 		log.Fatalf("Tried to fetch page number out of bounds. %d > %d", pageNum, tableMaxPages)
 	}
-	return t.pager.getPage(int64(pageNum))
+	return t.pager.getPage(pageNum)
 }

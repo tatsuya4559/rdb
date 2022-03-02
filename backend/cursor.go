@@ -2,24 +2,36 @@ package backend
 
 type Cursor struct {
 	table      *Table
-	rowNum     int
+	pageNum     int
+	cellNum int
 	EndOfTable bool
 }
 
 func TableStart(t *Table) *Cursor {
-	return &Cursor{
+	c := Cursor{
 		table:      t,
-		rowNum:     0,
-		EndOfTable: t.NumRows == 0,
+		pageNum: t.RootPageNum,
+		cellNum: 0,
 	}
+
+	rootNode := leafNode(t.GetPage(t.RootPageNum))
+	numCells := rootNode.numCells()
+	c.EndOfTable = numCells == 0
+
+	return &c
 }
 
 func TableEnd(t *Table) *Cursor {
-	return &Cursor{
+	c := Cursor{
 		table:      t,
-		rowNum:     t.NumRows,
+		pageNum: t.RootPageNum,
 		EndOfTable: true,
 	}
+
+	rootNode := leafNode(t.GetPage(t.RootPageNum))
+	c.cellNum = int(rootNode.numCells())
+
+	return &c
 }
 
 func (c *Cursor) GetValue() []byte {
