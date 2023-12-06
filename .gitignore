@@ -1,2 +1,4 @@
 *.o
 db
+
+__pycache__/

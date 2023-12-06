@@ -17,3 +17,7 @@ $(BIN): $(OBJS)
 .PHONY: clean
 clean:
 	@rm -f $(BIN) $(OBJS)
+
+.PHONY: test
+test:
+	./test.sh
