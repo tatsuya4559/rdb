@@ -1,8 +1,14 @@
 #ifndef _VM_H_
 #define _VM_H_
 
+#include "backend.h"
 #include "compiler.h"
 
-void execute_statement(Statement *stmt);
+typedef enum {
+  EXECUTE_SUCCESS,
+  EXECUTE_TABLE_FULL,
+} ExecuteResult;
+
+ExecuteResult execute_statement(Statement *stmt, Table *table);
 
 #endif /* _VM_H_ */

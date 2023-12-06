@@ -4,6 +4,7 @@
 #include "util.h"
 #include "compiler.h"
 #include "vm.h"
+#include "backend.h"
 
 static void print_prompt() {
   printf("db> ");
@@ -35,6 +36,7 @@ static MetaCommandResult do_meta_command(InputBuffer *b) {
 }
 
 int main(int argc, char **argv) {
+  Table *table = Table_new();
   InputBuffer *b = InputBuffer_new();
   for (;;) {
     print_prompt();
@@ -57,9 +59,18 @@ int main(int argc, char **argv) {
     case PREPARE_UNRECOGNIZED_STATEMENT:
       printf("Unrecognized keyword at start of '%s'.\n", b->buf);
       continue;
+    case PREPARE_SYNTAX_ERROR:
+      printf("Syntax error. Could not parse statement '%s'\n", b->buf);
+      continue;
     }
 
-    execute_statement(&stmt);
-    printf("Executed.\n");
+    switch (execute_statement(&stmt, table)) {
+    case EXIT_SUCCESS:
+      printf("Executed.\n");
+      break;
+    case EXECUTE_TABLE_FULL:
+      printf("Error: Table full.\n");
+      break;
+    }
   }
 }
