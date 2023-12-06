@@ -1,7 +1,7 @@
 CC := gcc
 CFLAGS := -Wall -g
 
-SRCS := main.c
+SRCS := main.c vm.c compiler.c util.c
 OBJS := $(patsubst %.c,%.o,$(SRCS))
 
 BIN := db
