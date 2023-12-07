@@ -35,10 +35,17 @@ void deserialize_row(void *src, Row *dest) {
   memcpy(&(dest->email), src + EMAIL_OFFSET, EMAIL_SIZE);
 }
 
-/* Table */
+/* Pager */
+#define TABLE_MAX_PAGES 100
 static const uint32_t PAGE_SIZE = 4096;
 static const uint32_t ROWS_PER_PAGE = PAGE_SIZE / ROW_SIZE;
 const uint32_t TABLE_MAX_ROWS = TABLE_MAX_PAGES * ROWS_PER_PAGE;
+
+struct Pager_tag {
+  int fd;
+  uint32_t file_len;
+  void *pages[TABLE_MAX_PAGES];
+};
 
 static Pager *Pager_new(const char *filename) {
   int fd = open(filename, O_RDWR|O_CREAT, S_IWUSR|S_IRUSR);
@@ -127,6 +134,7 @@ static void *Pager_get_page(Pager *p, uint32_t page_num) {
   return p->pages[page_num];
 }
 
+/* Table */
 Table *Table_new(const char *filename) {
   Pager *p = Pager_new(filename);
 
@@ -158,7 +166,7 @@ Cursor *table_end(Table *table) {
   return c;
 }
 
-void *cursor_value(Cursor *c) {
+void *Cursor_get_slot(Cursor *c) {
   uint32_t row_num = c->row_num;
   uint32_t page_num = row_num / ROWS_PER_PAGE;
   void *page = Pager_get_page(c->table->pager, page_num);
@@ -167,7 +175,7 @@ void *cursor_value(Cursor *c) {
   return page + byte_offset;
 }
 
-void cursor_advance(Cursor *c) {
+void Cursor_advance(Cursor *c) {
   assert(!c->end_of_table);
 
   c->row_num++;

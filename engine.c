@@ -9,7 +9,7 @@ static ExecuteResult execute_insert(Statement *stmt, Table *table) {
 
   Row *row_to_insert = &(stmt->row_to_insert);
   Cursor *c = table_end(table);
-  serialize_row(row_to_insert, cursor_value(c));
+  serialize_row(row_to_insert, Cursor_get_slot(c));
   table->num_rows++;
 
   free(c);
@@ -21,9 +21,9 @@ static ExecuteResult execute_select(Statement *stmt, Table *table) {
   Cursor *c = table_start(table);
   Row row;
   while (!c->end_of_table) {
-    deserialize_row(cursor_value(c), &row);
+    deserialize_row(Cursor_get_slot(c), &row);
     print_row(&row);
-    cursor_advance(c);
+    Cursor_advance(c);
   }
   free(c);
   return EXECUTE_SUCCESS;
