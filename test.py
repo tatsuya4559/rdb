@@ -80,3 +80,17 @@ class DBTest(TestCase):
         ]
         got = self.run_commands(commands)
         self.assertEqual(got, want)
+
+    def test_error_when_id_is_negative(self):
+        commands = [
+            "insert -1 foo foo@example.com",
+            "select",
+            ".exit",
+        ]
+        want = [
+            "db> ID must be positive.",
+            "db> Executed.",
+            "db> ",
+        ]
+        got = self.run_commands(commands)
+        self.assertEqual(got, want)

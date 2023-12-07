@@ -20,6 +20,9 @@ static PrepareResult prepare_insert(InputBuffer *b, Statement *stmt) {
   if (*endptr != '\0') {
     return PREPARE_SYNTAX_ERROR;
   }
+  if (id < 0) {
+    return PREPARE_NEGATIVE_ID;
+  }
   if (strlen(username) > COLUMN_USERNAME_SIZE) {
     return PREPARE_STRING_TOO_LONG;
   }
