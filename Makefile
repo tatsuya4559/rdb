@@ -1,3 +1,5 @@
+.DEFAULT_GOAL := all
+
 CC := gcc
 CFLAGS := -Wall -g
 
@@ -6,7 +8,7 @@ OBJS := $(patsubst %.c,%.o,$(SRCS))
 
 BIN := db
 
-all: $(BIN)
+all: $(BIN) ## Build all
 
 $(BIN): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^
@@ -15,9 +17,13 @@ $(BIN): $(OBJS)
 	$(CC) -c $(CFLAGS) -o $@ $^
 
 .PHONY: clean
-clean:
+clean: ## Clean artifacts
 	@rm -f $(BIN) $(OBJS)
 
 .PHONY: test
-test:
-	./test.sh
+test: ## Run all tests
+	python -m unittest
+
+.PHONY: help
+help: ## Display this help
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'

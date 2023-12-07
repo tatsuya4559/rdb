@@ -3,7 +3,7 @@ from unittest import TestCase
 
 
 class DBTest(TestCase):
-    def run_script(self, commands: list[str]) -> list[str]:
+    def run_commands(self, commands: list[str]) -> list[str]:
         input_data = "\n".join(commands) + "\n"
 
         p = subprocess.Popen(
@@ -34,5 +34,33 @@ class DBTest(TestCase):
             "Executed.",
             "db> ",
         ]
-        got = self.run_script(commands)
+        got = self.run_commands(commands)
+        self.assertEqual(got, want)
+
+    def test_error_when_table_is_full(self):
+        commands = [
+            f"insert {i} user{i} person{i}@example.com"
+            for i in range(6002)
+        ]
+        commands.append(".exit")
+        want = "db> Error: Table full."
+
+        got = self.run_commands(commands)
+        self.assertEqual(got[-2], want)
+
+    def test_insert_max_len_string(self):
+        long_username = "u" * 32
+        long_email = "e" * 255
+        commands = [
+            f"insert 1 {long_username} {long_email}",
+            "select",
+            ".exit",
+        ]
+        want = [
+            "db> Executed.",
+            f"db> (1, {long_username}, {long_email})",
+            "Executed.",
+            "db> ",
+        ]
+        got = self.run_commands(commands)
         self.assertEqual(got, want)
