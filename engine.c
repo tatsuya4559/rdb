@@ -1,6 +1,6 @@
 #include <stdbool.h>
 #include <assert.h>
-#include "vm.h"
+#include "engine.h"
 
 static ExecuteResult execute_insert(Statement *stmt, Table *table) {
   if (table->num_rows >= TABLE_MAX_ROWS) {
