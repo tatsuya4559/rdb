@@ -2,7 +2,7 @@
 #define _VM_H_
 
 #include "storage.h"
-#include "compiler.h"
+#include "query.h"
 
 typedef enum {
   EXECUTE_SUCCESS,

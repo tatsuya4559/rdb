@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "util.h"
-#include "compiler.h"
+#include "query.h"
 #include "engine.h"
 #include "storage.h"
 

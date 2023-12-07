@@ -3,7 +3,7 @@
 CC := gcc
 CFLAGS := -Wall -g
 
-SRCS := main.c engine.c compiler.c storage.c util.c
+SRCS := main.c engine.c query.c storage.c util.c
 OBJS := $(patsubst %.c,%.o,$(SRCS))
 
 BIN := db

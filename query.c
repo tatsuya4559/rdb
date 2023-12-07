@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "compiler.h"
+#include "query.h"
 #include "storage.h"
 
 static PrepareResult prepare_insert(InputBuffer *b, Statement *stmt) {
