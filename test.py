@@ -1,13 +1,19 @@
+import os
 import subprocess
 from unittest import TestCase
 
 
 class DBTest(TestCase):
+    TEST_DB = "test.db"
+
+    def tearDown(self):
+        os.remove(self.TEST_DB)
+
     def run_commands(self, commands: list[str]) -> list[str]:
         input_data = "\n".join(commands) + "\n"
 
         p = subprocess.Popen(
-            "./db",
+            ["./db", self.TEST_DB],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -93,4 +99,21 @@ class DBTest(TestCase):
             "db> ",
         ]
         got = self.run_commands(commands)
+        self.assertEqual(got, want)
+
+    def test_keep_data_after_closing_connection(self):
+        self.run_commands([
+            "insert 1 user1 person1@example.com",
+            ".exit",
+        ])
+
+        want = [
+            "db> (1, user1, person1@example.com)",
+            "Executed.",
+            "db> ",
+        ]
+        got = self.run_commands([
+            "select",
+            ".exit",
+        ])
         self.assertEqual(got, want)

@@ -26,8 +26,9 @@ typedef enum {
   META_COMMAND_UNRECOGNIZED_COMMAND,
 } MetaCommandResult;
 
-static MetaCommandResult do_meta_command(InputBuffer *b) {
+static MetaCommandResult do_meta_command(InputBuffer *b, Table *table) {
   if (strcmp(b->buf, ".exit") == 0) {
+    Table_free(table);
     InputBuffer_close(b);
     exit(EXIT_SUCCESS);
   } else {
@@ -36,14 +37,20 @@ static MetaCommandResult do_meta_command(InputBuffer *b) {
 }
 
 int main(int argc, char **argv) {
-  Table *table = Table_new();
+  if (argc < 2) {
+    fprintf(stderr, "Must supply a database filename.\n");
+    exit(EXIT_FAILURE);
+  }
+
+  char *filename = argv[1];
+  Table *table = Table_new(filename);
   InputBuffer *b = InputBuffer_new();
   for (;;) {
     print_prompt();
     read_input(b);
 
     if (b->buf[0] == '.') {
-      switch (do_meta_command(b)) {
+      switch (do_meta_command(b, table)) {
       case META_COMMAND_SUCCESS:
         continue;
       case META_COMMAND_UNRECOGNIZED_COMMAND:

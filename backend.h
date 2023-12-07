@@ -20,11 +20,18 @@ void deserialize_row(void *src, Row *dest);
 extern const uint32_t TABLE_MAX_ROWS;
 
 typedef struct {
-  uint32_t num_rows;
+  int fd;
+  uint32_t file_len;
   void *pages[TABLE_MAX_PAGES];
+} Pager;
+
+typedef struct {
+  uint32_t num_rows;
+  Pager *pager;
 } Table;
 
-Table *Table_new();
+Table *Table_new(const char *filename);
+void Table_free(Table *table);
 void *row_slot(Table *table, uint32_t row_num);
 
 #endif /* _BACKEND_H_ */
