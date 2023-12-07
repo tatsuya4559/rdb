@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "util.h"
 #include "query.h"
 #include "engine.h"
@@ -19,21 +18,6 @@ static void read_input(InputBuffer *b) {
   // ignore trailing newline
   b->input_len = bytes_read - 1;
   b->buf[bytes_read - 1] = '\0';
-}
-
-typedef enum {
-  META_COMMAND_SUCCESS,
-  META_COMMAND_UNRECOGNIZED_COMMAND,
-} MetaCommandResult;
-
-static MetaCommandResult do_meta_command(InputBuffer *b, Table *table) {
-  if (strcmp(b->buf, ".exit") == 0) {
-    Table_free(table);
-    InputBuffer_close(b);
-    exit(EXIT_SUCCESS);
-  } else {
-    return META_COMMAND_UNRECOGNIZED_COMMAND;
-  }
 }
 
 int main(int argc, char **argv) {

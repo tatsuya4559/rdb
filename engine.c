@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <assert.h>
+#include <string.h>
 #include "engine.h"
 
 static ExecuteResult execute_insert(Statement *stmt, Table *table) {
@@ -37,5 +38,15 @@ ExecuteResult execute_statement(Statement *stmt, Table *table) {
     return execute_select(stmt, table);
   default:
     assert(false);
+  }
+}
+
+MetaCommandResult do_meta_command(InputBuffer *b, Table *table) {
+  if (strcmp(b->buf, ".exit") == 0) {
+    Table_free(table);
+    InputBuffer_close(b);
+    exit(EXIT_SUCCESS);
+  } else {
+    return META_COMMAND_UNRECOGNIZED_COMMAND;
   }
 }
