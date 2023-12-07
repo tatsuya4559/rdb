@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -140,10 +141,37 @@ void Table_free(Table *table) {
   free(table);
 }
 
-void *row_slot(Table *table, uint32_t row_num) {
+/* Cursor */
+Cursor *table_start(Table *table) {
+  Cursor *c = malloc(sizeof(Cursor));
+  c->table = table;
+  c->row_num = 0;
+  c->end_of_table = (table->num_rows == 0);
+  return c;
+}
+
+Cursor *table_end(Table *table) {
+  Cursor *c = malloc(sizeof(Cursor));
+  c->table = table;
+  c->row_num = table->num_rows;
+  c->end_of_table = true;
+  return c;
+}
+
+void *cursor_value(Cursor *c) {
+  uint32_t row_num = c->row_num;
   uint32_t page_num = row_num / ROWS_PER_PAGE;
-  void *page = Pager_get_page(table->pager, page_num);
+  void *page = Pager_get_page(c->table->pager, page_num);
   uint32_t row_offset = row_num % ROWS_PER_PAGE;
   uint32_t byte_offset = row_offset * ROW_SIZE;
   return page + byte_offset;
+}
+
+void cursor_advance(Cursor *c) {
+  assert(!c->end_of_table);
+
+  c->row_num++;
+  if (c->row_num >= c->table->num_rows) {
+    c->end_of_table = true;
+  }
 }

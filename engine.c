@@ -8,18 +8,24 @@ static ExecuteResult execute_insert(Statement *stmt, Table *table) {
   }
 
   Row *row_to_insert = &(stmt->row_to_insert);
-  serialize_row(row_to_insert, row_slot(table, table->num_rows));
+  Cursor *c = table_end(table);
+  serialize_row(row_to_insert, cursor_value(c));
   table->num_rows++;
+
+  free(c);
 
   return EXECUTE_SUCCESS;
 }
 
 static ExecuteResult execute_select(Statement *stmt, Table *table) {
+  Cursor *c = table_start(table);
   Row row;
-  for (uint32_t i = 0; i < table->num_rows; i++) {
-    deserialize_row(row_slot(table, i), &row);
+  while (!c->end_of_table) {
+    deserialize_row(cursor_value(c), &row);
     print_row(&row);
+    cursor_advance(c);
   }
+  free(c);
   return EXECUTE_SUCCESS;
 }
 

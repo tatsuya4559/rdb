@@ -2,6 +2,7 @@
 #define _BACKEND_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define COLUMN_USERNAME_SIZE 32
 #define COLUMN_EMAIL_SIZE 255
@@ -32,6 +33,16 @@ typedef struct {
 
 Table *Table_new(const char *filename);
 void Table_free(Table *table);
-void *row_slot(Table *table, uint32_t row_num);
+
+typedef struct {
+  Table *table;
+  uint32_t row_num;
+  bool end_of_table;
+} Cursor;
+
+Cursor *table_start(Table *table);
+Cursor *table_end(Table *table);
+void *cursor_value(Cursor *c);
+void cursor_advance(Cursor *c);
 
 #endif /* _BACKEND_H_ */
