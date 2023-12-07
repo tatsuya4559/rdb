@@ -64,3 +64,19 @@ class DBTest(TestCase):
         ]
         got = self.run_commands(commands)
         self.assertEqual(got, want)
+
+    def test_error_when_strings_too_long(self):
+        long_username = "u" * 33
+        long_email = "e" * 256
+        commands = [
+            f"insert 1 {long_username} {long_email}",
+            "select",
+            ".exit",
+        ]
+        want = [
+            "db> String is too long.",
+            "db> Executed.",
+            "db> ",
+        ]
+        got = self.run_commands(commands)
+        self.assertEqual(got, want)

@@ -18,6 +18,7 @@ typedef enum {
   PREPARE_SUCCESS,
   PREPARE_UNRECOGNIZED_STATEMENT,
   PREPARE_SYNTAX_ERROR,
+  PREPARE_STRING_TOO_LONG,
 } PrepareResult;
 
 PrepareResult prepare_statement(InputBuffer *b, Statement *stmt);

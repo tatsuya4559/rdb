@@ -62,6 +62,9 @@ int main(int argc, char **argv) {
     case PREPARE_SYNTAX_ERROR:
       printf("Syntax error. Could not parse statement '%s'\n", b->buf);
       continue;
+    case PREPARE_STRING_TOO_LONG:
+      printf("String is too long.\n");
+      continue;
     }
 
     switch (execute_statement(&stmt, table)) {
