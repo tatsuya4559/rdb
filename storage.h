@@ -1,5 +1,4 @@
-#ifndef _BACKEND_H_
-#define _BACKEND_H_
+#pragma once
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -43,5 +42,3 @@ Cursor *table_start(Table *table);
 Cursor *table_end(Table *table);
 void *Cursor_get_slot(Cursor *c);
 void Cursor_advance(Cursor *c);
-
-#endif /* _BACKEND_H_ */

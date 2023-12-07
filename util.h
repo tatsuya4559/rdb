@@ -1,5 +1,4 @@
-#ifndef _UTIL_H_
-#define _UTIL_H_
+#pragma once
 
 #include <stdlib.h>
 
@@ -13,5 +12,3 @@ typedef struct {
 
 InputBuffer *InputBuffer_new();
 void InputBuffer_close(InputBuffer *b);
-
-#endif /* _UTIL_H_ */

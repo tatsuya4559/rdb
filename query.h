@@ -1,5 +1,4 @@
-#ifndef _COMPILER_H_
-#define _COMPILER_H_
+#pragma once
 
 #include "storage.h"
 #include "util.h"
@@ -23,5 +22,3 @@ typedef enum {
 } PrepareResult;
 
 PrepareResult prepare_statement(InputBuffer *b, Statement *stmt);
-
-#endif /* _COMPILER_H_ */

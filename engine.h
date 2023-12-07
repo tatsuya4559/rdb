@@ -1,5 +1,4 @@
-#ifndef _VM_H_
-#define _VM_H_
+#pragma once
 
 #include "storage.h"
 #include "query.h"
@@ -10,5 +9,3 @@ typedef enum {
 } ExecuteResult;
 
 ExecuteResult execute_statement(Statement *stmt, Table *table);
-
-#endif /* _VM_H_ */
