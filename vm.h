@@ -1,7 +1,7 @@
 #ifndef _VM_H_
 #define _VM_H_
 
-#include "backend.h"
+#include "storage.h"
 #include "compiler.h"
 
 typedef enum {

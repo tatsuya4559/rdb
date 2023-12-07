@@ -1,7 +1,7 @@
 #ifndef _COMPILER_H_
 #define _COMPILER_H_
 
-#include "backend.h"
+#include "storage.h"
 #include "util.h"
 
 typedef enum {

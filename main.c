@@ -4,7 +4,7 @@
 #include "util.h"
 #include "compiler.h"
 #include "vm.h"
-#include "backend.h"
+#include "storage.h"
 
 static void print_prompt() {
   printf("db> ");

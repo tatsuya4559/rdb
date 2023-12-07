@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "compiler.h"
-#include "backend.h"
+#include "storage.h"
 
 static PrepareResult prepare_insert(InputBuffer *b, Statement *stmt) {
   stmt->type = STATEMENT_INSERT;
