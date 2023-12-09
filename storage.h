@@ -51,3 +51,4 @@ void leaf_node_insert(Cursor *c, uint32_t key, Row *value);
 uint32_t *leaf_node_num_cells(void *node);
 
 void print_constants(void);
+void print_leaf_node(void *node);

@@ -52,6 +52,10 @@ MetaCommandResult do_meta_command(InputBuffer *b, Table *table) {
     printf("Constants:\n");
     print_constants();
     return META_COMMAND_SUCCESS;
+  } else if (strcmp(b->buf, ".btree") == 0) {
+    printf("Tree:\n");
+    print_leaf_node(get_page(table->pager, table->root_page_num));
+    return META_COMMAND_SUCCESS;
   } else {
     return META_COMMAND_UNRECOGNIZED_COMMAND;
   }
