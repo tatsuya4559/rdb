@@ -56,7 +56,7 @@ ExecuteResult execute_statement(Statement *stmt, Table *table) {
 MetaCommandResult do_meta_command(InputBuffer *b, Table *table) {
   if (strcmp(b->buf, ".exit") == 0) {
     db_close(table);
-    InputBuffer_close(b);
+    close_input_buffer(b);
     exit(EXIT_SUCCESS);
   } else if (strcmp(b->buf, ".constants") == 0) {
     printf("Constants:\n");

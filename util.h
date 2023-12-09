@@ -10,5 +10,5 @@ typedef struct {
   ssize_t input_len;
 } InputBuffer;
 
-InputBuffer *InputBuffer_new();
-void InputBuffer_close(InputBuffer *b);
+InputBuffer *new_input_buffer();
+void close_input_buffer(InputBuffer *b);
