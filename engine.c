@@ -1,17 +1,19 @@
+#include <stdio.h>
 #include <stdbool.h>
 #include <assert.h>
 #include <string.h>
 #include "engine.h"
+#include "storage.h"
 
 static ExecuteResult execute_insert(Statement *stmt, Table *table) {
-  if (table->num_rows >= TABLE_MAX_ROWS) {
+  void *node = get_page(table->pager, table->root_page_num);
+  if (*leaf_node_num_cells(node) >= LEAF_NODE_MAX_CELLS) {
     return EXECUTE_TABLE_FULL;
   }
 
   Row *row_to_insert = &(stmt->row_to_insert);
   Cursor *c = table_end(table);
-  serialize_row(row_to_insert, Cursor_get_slot(c));
-  table->num_rows++;
+  leaf_node_insert(c, row_to_insert->id, row_to_insert);
 
   free(c);
 
@@ -43,9 +45,13 @@ ExecuteResult execute_statement(Statement *stmt, Table *table) {
 
 MetaCommandResult do_meta_command(InputBuffer *b, Table *table) {
   if (strcmp(b->buf, ".exit") == 0) {
-    Table_free(table);
+    db_close(table);
     InputBuffer_close(b);
     exit(EXIT_SUCCESS);
+  } else if (strcmp(b->buf, ".constants") == 0) {
+    printf("Constants:\n");
+    print_constants();
+    return META_COMMAND_SUCCESS;
   } else {
     return META_COMMAND_UNRECOGNIZED_COMMAND;
   }
