@@ -17,4 +17,5 @@ typedef enum {
   META_COMMAND_UNRECOGNIZED_COMMAND,
 } MetaCommandResult;
 
+void do_exit(InputBuffer *b, Table *table);
 MetaCommandResult do_meta_command(InputBuffer *b, Table *table);

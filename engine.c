@@ -53,11 +53,15 @@ ExecuteResult execute_statement(Statement *stmt, Table *table) {
   }
 }
 
+void do_exit(InputBuffer *b, Table *table) {
+  db_close(table);
+  close_input_buffer(b);
+  exit(EXIT_SUCCESS);
+}
+
 MetaCommandResult do_meta_command(InputBuffer *b, Table *table) {
   if (strcmp(b->buf, ".exit") == 0) {
-    db_close(table);
-    close_input_buffer(b);
-    exit(EXIT_SUCCESS);
+    do_exit(b, table);
   } else if (strcmp(b->buf, ".constants") == 0) {
     printf("Constants:\n");
     print_constants();
@@ -66,7 +70,6 @@ MetaCommandResult do_meta_command(InputBuffer *b, Table *table) {
     printf("Tree:\n");
     print_leaf_node(get_page(table->pager, table->root_page_num));
     return META_COMMAND_SUCCESS;
-  } else {
-    return META_COMMAND_UNRECOGNIZED_COMMAND;
   }
+  return META_COMMAND_UNRECOGNIZED_COMMAND;
 }
