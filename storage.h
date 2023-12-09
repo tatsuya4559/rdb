@@ -42,8 +42,8 @@ typedef struct {
 
 Cursor *table_start(Table *table);
 Cursor *table_end(Table *table);
-void *Cursor_get_slot(Cursor *c);
-void Cursor_advance(Cursor *c);
+void *cursor_get_slot(Cursor *c);
+void cursor_advance(Cursor *c);
 
 /* Node */
 extern const uint32_t LEAF_NODE_MAX_CELLS;

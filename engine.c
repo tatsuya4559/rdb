@@ -24,9 +24,9 @@ static ExecuteResult execute_select(Statement *stmt, Table *table) {
   Cursor *c = table_start(table);
   Row row;
   while (!c->end_of_table) {
-    deserialize_row(Cursor_get_slot(c), &row);
+    deserialize_row(cursor_get_slot(c), &row);
     print_row(&row);
-    Cursor_advance(c);
+    cursor_advance(c);
   }
   free(c);
   return EXECUTE_SUCCESS;

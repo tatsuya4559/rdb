@@ -72,19 +72,19 @@ uint32_t *leaf_node_num_cells(void *node) {
   return node + LEAF_NODE_NUM_CELLS_OFFSET;
 }
 
-void *leaf_node_cell(void *node, uint32_t cell_num) {
+static void *leaf_node_cell(void *node, uint32_t cell_num) {
   return node + LEAF_NODE_HEADER_SIZE + LEAF_NODE_CELL_SIZE * cell_num;
 }
 
-uint32_t *leaf_node_key(void *node, uint32_t cell_num) {
+static uint32_t *leaf_node_key(void *node, uint32_t cell_num) {
   return leaf_node_cell(node, cell_num);
 }
 
-void *leaf_node_value(void *node, uint32_t cell_num) {
+static void *leaf_node_value(void *node, uint32_t cell_num) {
   return leaf_node_cell(node, cell_num) + LEAF_NODE_VALUE_OFFSET;
 }
 
-void initialize_leaf_node(void *node) {
+static void initialize_leaf_node(void *node) {
   *leaf_node_num_cells(node) = 0;
 }
 
@@ -120,7 +120,7 @@ static Pager *pager_open(const char *filename) {
   return pager;
 }
 
-static void Pager_flush(Pager *p, uint32_t page_num) {
+static void pager_flush(Pager *p, uint32_t page_num) {
   if (p->pages[page_num] == NULL) {
     return;
   }
@@ -128,9 +128,9 @@ static void Pager_flush(Pager *p, uint32_t page_num) {
   if(write(p->fd, p->pages[page_num], PAGE_SIZE) == -1) die("write(2)");
 }
 
-static void Pager_free(Pager *p) {
+static void pager_free(Pager *p) {
   for (uint32_t i = 0; i < p->num_pages; i++) {
-    Pager_flush(p, i);
+    pager_flush(p, i);
     free(p->pages[i]);
     p->pages[i] = NULL;
   }
@@ -185,7 +185,7 @@ Table *db_open(const char *filename) {
 }
 
 void db_close(Table *table) {
-  Pager_free(table->pager);
+  pager_free(table->pager);
   free(table);
 }
 
@@ -214,12 +214,12 @@ Cursor *table_end(Table *table) {
   return c;
 }
 
-void *Cursor_get_slot(Cursor *c) {
+void *cursor_get_slot(Cursor *c) {
   void *page = get_page(c->table->pager, c->page_num);
   return leaf_node_value(page, c->cell_num);
 }
 
-void Cursor_advance(Cursor *c) {
+void cursor_advance(Cursor *c) {
   void *page = get_page(c->table->pager, c->page_num);
   c->cell_num++;
   if (c->cell_num >= (*leaf_node_num_cells(page))) {
