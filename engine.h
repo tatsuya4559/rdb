@@ -7,6 +7,7 @@
 typedef enum {
   EXECUTE_SUCCESS,
   EXECUTE_TABLE_FULL,
+  EXECUTE_DUPLICATE_KEY,
 } ExecuteResult;
 
 ExecuteResult execute_statement(Statement *stmt, Table *table);

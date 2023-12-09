@@ -7,12 +7,22 @@
 
 static ExecuteResult execute_insert(Statement *stmt, Table *table) {
   void *node = get_page(table->pager, table->root_page_num);
-  if (*leaf_node_num_cells(node) >= LEAF_NODE_MAX_CELLS) {
+  uint32_t num_cells = *leaf_node_num_cells(node);
+  if ( num_cells >= LEAF_NODE_MAX_CELLS) {
     return EXECUTE_TABLE_FULL;
   }
 
   Row *row_to_insert = &(stmt->row_to_insert);
-  Cursor *c = table_end(table);
+  uint32_t key_to_insert = row_to_insert->id;
+  Cursor *c = table_find(table, key_to_insert);
+
+  if (c->cell_num < num_cells) {
+    uint32_t key_at_index = *leaf_node_key(node, c->cell_num);
+    if (key_at_index == key_to_insert) {
+      return EXECUTE_DUPLICATE_KEY;
+    }
+  }
+
   leaf_node_insert(c, row_to_insert->id, row_to_insert);
 
   free(c);

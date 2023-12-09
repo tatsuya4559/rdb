@@ -68,6 +68,14 @@ static const uint32_t LEAF_NODE_CELL_SIZE = LEAF_NODE_KEY_SIZE + LEAF_NODE_VALUE
 static const uint32_t LEAF_NODE_SPACE_FOR_CELLS = PAGE_SIZE - LEAF_NODE_HEADER_SIZE;
 const uint32_t LEAF_NODE_MAX_CELLS = LEAF_NODE_SPACE_FOR_CELLS / LEAF_NODE_CELL_SIZE;
 
+static NodeType get_node_type(void *node) {
+  return *(NodeType *)(node + NODE_TYPE_OFFSET);
+}
+
+static void set_node_type(void *node, NodeType type) {
+  *(NodeType *)(node + NODE_TYPE_OFFSET) = type;
+}
+
 uint32_t *leaf_node_num_cells(void *node) {
   return node + LEAF_NODE_NUM_CELLS_OFFSET;
 }
@@ -76,7 +84,7 @@ static void *leaf_node_cell(void *node, uint32_t cell_num) {
   return node + LEAF_NODE_HEADER_SIZE + LEAF_NODE_CELL_SIZE * cell_num;
 }
 
-static uint32_t *leaf_node_key(void *node, uint32_t cell_num) {
+uint32_t *leaf_node_key(void *node, uint32_t cell_num) {
   return leaf_node_cell(node, cell_num);
 }
 
@@ -86,6 +94,7 @@ static void *leaf_node_value(void *node, uint32_t cell_num) {
 
 static void initialize_leaf_node(void *node) {
   *leaf_node_num_cells(node) = 0;
+  set_node_type(node, NODE_LEAF);
 }
 
 /* Pager */
@@ -202,16 +211,47 @@ Cursor *table_start(Table *table) {
   return c;
 }
 
-Cursor *table_end(Table *table) {
+Cursor *leaf_node_find(Table *table, uint32_t page_num, uint32_t key) {
+  void *node = get_page(table->pager, page_num);
+  uint32_t num_cells = *leaf_node_num_cells(node);
+
   Cursor *c = malloc(sizeof(Cursor));
   c->table = table;
-  c->page_num = table->root_page_num;
+  c->page_num = page_num;
 
-  void *root_node = get_page(table->pager, table->root_page_num);
-  uint32_t num_cells = *leaf_node_num_cells(root_node);
-  c->cell_num = num_cells;
-  c->end_of_table = true;
+  // Binary search
+  uint32_t min_idx = 0;
+  uint32_t one_past_max_idx = num_cells;
+  while (min_idx < one_past_max_idx) {
+    uint32_t idx = (min_idx + one_past_max_idx) / 2;
+    uint32_t key_at_idx = *leaf_node_key(node, idx);
+    if (key == key_at_idx) {
+      c->cell_num = idx;
+      c->end_of_table = idx == num_cells;
+      return c;
+    }
+    if (key < key_at_idx) {
+      one_past_max_idx = idx;
+    } else {
+      min_idx = idx + 1;
+    }
+  }
+
+  c->end_of_table = num_cells <= min_idx;
+  c->cell_num = min_idx;
   return c;
+}
+
+Cursor *table_find(Table *table, uint32_t key) {
+  uint32_t root_page_num = table->root_page_num;
+  void *root_node = get_page(table->pager, root_page_num);
+
+  if (get_node_type(root_node) == NODE_LEAF) {
+    return leaf_node_find(table, root_page_num, key);
+  } else {
+    fprintf(stderr, "Need to implement searching an internal node\n");
+    exit(EXIT_FAILURE);
+  }
 }
 
 void *cursor_get_slot(Cursor *c) {

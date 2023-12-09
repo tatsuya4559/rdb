@@ -125,12 +125,12 @@ class DBTest(TestCase):
             "db> Tree:",
             "leaf (size 2)",
             "  - 0 : 1",
-            "  - 1 : 2",
+            "  - 1 : 3",
             "db> ",
         ]
         got = self.run_commands([
-            "insert 1 user1 person1@example.com",
-            "insert 2 user2 person2@example.com",
+            "insert 3 user1 person1@example.com",
+            "insert 1 user2 person2@example.com",
             ".btree",
             ".exit",
         ])
