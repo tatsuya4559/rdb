@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "util.h"
 #include "query.h"
 #include "engine.h"
@@ -9,15 +10,19 @@ static void print_prompt() {
   printf("db> ");
 }
 
-static void read_input(InputBuffer *b) {
+static bool read_input(InputBuffer *b) {
   ssize_t bytes_read = getline(&(b->buf), &(b->buf_len), stdin);
-  if (bytes_read <= 0) {
+  if (feof(stdin)) {
+    return false;
+  }
+  if (bytes_read < 0) {
     die("getline");
   }
 
   // ignore trailing newline
   b->input_len = bytes_read - 1;
   b->buf[bytes_read - 1] = '\0';
+  return true;
 }
 
 int main(int argc, char **argv) {
@@ -27,11 +32,13 @@ int main(int argc, char **argv) {
   }
 
   char *filename = argv[1];
-  Table *table = Table_new(filename);
-  InputBuffer *b = InputBuffer_new();
+  Table *table = db_open(filename);
+  InputBuffer *b = new_input_buffer();
   for (;;) {
     print_prompt();
-    read_input(b);
+    if (!read_input(b)) {
+      do_exit(b, table);
+    }
 
     if (b->buf[0] == '.') {
       switch (do_meta_command(b, table)) {
@@ -62,11 +69,14 @@ int main(int argc, char **argv) {
     }
 
     switch (execute_statement(&stmt, table)) {
-    case EXIT_SUCCESS:
+    case EXECUTE_SUCCESS:
       printf("Executed.\n");
       break;
     case EXECUTE_TABLE_FULL:
       printf("Error: Table full.\n");
+      break;
+    case EXECUTE_DUPLICATE_KEY:
+      printf("Error: Duplicate key.\n");
       break;
     }
   }

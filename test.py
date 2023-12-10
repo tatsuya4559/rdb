@@ -117,3 +117,21 @@ class DBTest(TestCase):
             ".exit",
         ])
         self.assertEqual(got, want)
+
+    def test_btree_visalization(self):
+        want = [
+            "db> Executed.",
+            "db> Executed.",
+            "db> Tree:",
+            "- leaf (size 2)",
+            "  - 1",
+            "  - 3",
+            "db> ",
+        ]
+        got = self.run_commands([
+            "insert 3 user1 person1@example.com",
+            "insert 1 user2 person2@example.com",
+            ".btree",
+            ".exit",
+        ])
+        self.assertEqual(got, want)

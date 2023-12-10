@@ -7,6 +7,7 @@
 typedef enum {
   EXECUTE_SUCCESS,
   EXECUTE_TABLE_FULL,
+  EXECUTE_DUPLICATE_KEY,
 } ExecuteResult;
 
 ExecuteResult execute_statement(Statement *stmt, Table *table);
@@ -16,4 +17,5 @@ typedef enum {
   META_COMMAND_UNRECOGNIZED_COMMAND,
 } MetaCommandResult;
 
+void do_exit(InputBuffer *b, Table *table);
 MetaCommandResult do_meta_command(InputBuffer *b, Table *table);

@@ -6,7 +6,7 @@ void die(const char *msg) {
   exit(EXIT_FAILURE);
 }
 
-InputBuffer *InputBuffer_new() {
+InputBuffer *new_input_buffer() {
   InputBuffer *b = malloc(sizeof(InputBuffer));
   if (!b) {
     die("malloc");
@@ -17,7 +17,7 @@ InputBuffer *InputBuffer_new() {
   return b;
 }
 
-void InputBuffer_close(InputBuffer *b) {
+void close_input_buffer(InputBuffer *b) {
   free(b->buf);
   free(b);
 }

@@ -47,4 +47,3 @@ PrepareResult prepare_statement(InputBuffer *b, Statement *stmt) {
   }
   return PREPARE_UNRECOGNIZED_STATEMENT;
 }
-
