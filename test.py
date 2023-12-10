@@ -123,9 +123,9 @@ class DBTest(TestCase):
             "db> Executed.",
             "db> Executed.",
             "db> Tree:",
-            "leaf (size 2)",
-            "  - 0 : 1",
-            "  - 1 : 3",
+            "- leaf (size 2)",
+            "  - 1",
+            "  - 3",
             "db> ",
         ]
         got = self.run_commands([
