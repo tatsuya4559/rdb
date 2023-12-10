@@ -2,6 +2,8 @@
 
 CC := gcc
 CFLAGS := -Wall -g
+# for debug
+# CFLAGS := -Wall -g -DDEBUG
 
 SRCS := main.c engine.c query.c storage.c util.c
 OBJS := $(patsubst %.c,%.o,$(SRCS))

@@ -327,12 +327,11 @@ Cursor *internal_node_find(Table *table, uint32_t page_num, uint32_t key) {
   // Binary search
   uint32_t min_idx = 0;
   uint32_t max_idx = num_keys;
-  printf("key = %d\n", key);
   while (min_idx < max_idx) {
     uint32_t idx = (min_idx + max_idx) / 2;
     uint32_t key_to_right = *internal_node_key(node, idx);
-    printf("min=%d idx=%d max=%d\n", min_idx, idx, max_idx);
-    printf("key=%d key_to_right=%d\n", key, key_to_right);
+    DEBUG_PRINT("min=%d idx=%d max=%d\n", min_idx, idx, max_idx);
+    DEBUG_PRINT("key=%d key_to_right=%d\n", key, key_to_right);
     if (key == key_to_right) {
       min_idx = idx;
       break;
