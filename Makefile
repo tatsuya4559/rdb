@@ -1,9 +1,9 @@
 .DEFAULT_GOAL := all
 
 CC := gcc
-CFLAGS := -Wall -g
+# CFLAGS := -Wall
 # for debug
-# CFLAGS := -Wall -g -DDEBUG
+CFLAGS := -Wall -g -DDEBUG
 
 SRCS := main.c engine.c query.c storage.c util.c
 OBJS := $(patsubst %.c,%.o,$(SRCS))
