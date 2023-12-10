@@ -65,8 +65,13 @@ static void set_node_root(void *node, bool is_root) {
 /* Leaf Node Header Layout */
 static const uint32_t LEAF_NODE_NUM_CELLS_SIZE = sizeof(uint32_t);
 static const uint32_t LEAF_NODE_NUM_CELLS_OFFSET = COMMON_NODE_HEADER_SIZE;
+static const uint32_t LEAF_NODE_NEXT_LEAF_SIZE = sizeof(uint32_t);
+static const uint32_t LEAF_NODE_NEXT_LEAF_OFFSET =
+  LEAF_NODE_NUM_CELLS_OFFSET + LEAF_NODE_NUM_CELLS_SIZE;
 static const uint32_t LEAF_NODE_HEADER_SIZE =
-  COMMON_NODE_HEADER_SIZE + LEAF_NODE_NUM_CELLS_SIZE;
+  COMMON_NODE_HEADER_SIZE
+  + LEAF_NODE_NUM_CELLS_SIZE
+  + LEAF_NODE_NEXT_LEAF_SIZE;
 
 /* Leaf Node Body Layout */
 static const uint32_t LEAF_NODE_KEY_SIZE = sizeof(uint32_t);
@@ -104,8 +109,13 @@ static void *leaf_node_value(void *node, uint32_t cell_num) {
   return leaf_node_cell(node, cell_num) + LEAF_NODE_VALUE_OFFSET;
 }
 
+static uint32_t *leaf_node_next_leaf(void *node) {
+  return node + LEAF_NODE_NEXT_LEAF_OFFSET;
+}
+
 static void initialize_leaf_node(void *node) {
   *leaf_node_num_cells(node) = 0;
+  *leaf_node_next_leaf(node) = 0; // 0 denotes no sibling
   set_node_type(node, NODE_LEAF);
   set_node_root(node, false);
 }
@@ -278,14 +288,9 @@ void db_close(Table *table) {
 
 /* Cursor */
 Cursor *table_start(Table *table) {
-  Cursor *c = malloc(sizeof(Cursor));
-  c->table = table;
-  c->page_num = table->root_page_num;
-  c->cell_num = 0;
-
-  void *root_node = get_page(table->pager, table->root_page_num);
-  uint32_t num_cells = *leaf_node_num_cells(root_node);
-  c->end_of_table = (num_cells == 0);
+  Cursor *c = table_find(table, 0);
+  void *node = get_page(table->pager, c->page_num);
+  c->end_of_table = (*leaf_node_num_cells(node) == 0);
   return c;
 }
 
@@ -370,10 +375,16 @@ void *cursor_get_slot(Cursor *c) {
 }
 
 void cursor_advance(Cursor *c) {
-  void *page = get_page(c->table->pager, c->page_num);
+  void *node = get_page(c->table->pager, c->page_num);
   c->cell_num++;
-  if (c->cell_num >= (*leaf_node_num_cells(page))) {
-    c->end_of_table = true;
+  if (c->cell_num >= (*leaf_node_num_cells(node))) {
+    uint32_t next_page_num = *leaf_node_next_leaf(node);
+    if (next_page_num == 0) {
+      c->end_of_table = true;
+    } else {
+      c->page_num = next_page_num;
+      c->cell_num = 0;
+    }
   }
 }
 
@@ -400,6 +411,8 @@ void leaf_node_split_and_insert(Cursor *c, uint32_t key, Row *value) {
   uint32_t new_page_num = get_unused_page_num(c->table->pager);
   void *new_node = get_page(c->table->pager, new_page_num);
   initialize_leaf_node(new_node);
+  *leaf_node_next_leaf(new_node) = *leaf_node_next_leaf(old_node);
+  *leaf_node_next_leaf(old_node) = new_page_num;
 
   /* copy every cell into its new location */
   for (int32_t i=LEAF_NODE_MAX_CELLS; i>=0; i--) {
@@ -408,7 +421,8 @@ void leaf_node_split_and_insert(Cursor *c, uint32_t key, Row *value) {
     void *dest = leaf_node_cell(dest_node, index_within_node);
 
     if (i == c->cell_num) {
-      serialize_row(value, dest);
+      serialize_row(value, leaf_node_value(dest_node, index_within_node));
+      *leaf_node_key(dest_node, index_within_node) = key;
     } else if (i > c->cell_num) {
       memcpy(dest, leaf_node_cell(old_node, i-1), LEAF_NODE_CELL_SIZE);
     } else {
@@ -466,18 +480,18 @@ void print_tree(Pager *p, uint32_t page_num, uint32_t depth) {
   switch (get_node_type(node)) {
   case NODE_LEAF:
     num_keys = *leaf_node_num_cells(node);
-    printf("%*s leaf (size %d)\n", depth*2, "-", num_keys);
+    printf("%*s leaf (size %d)\n", depth*2+1, "-", num_keys);
     for (uint32_t i=0; i<num_keys; i++) {
-      printf("%*s %d\n", (depth+1)*2, "-", *leaf_node_key(node, i));
+      printf("%*s %d\n", (depth+1)*2+1, "-", *leaf_node_key(node, i));
     }
     break;
   case NODE_INTERNAL:
     num_keys = *internal_node_num_keys(node);
-    printf("%*s internal (size %d)\n", depth*2, "-", num_keys);
+    printf("%*s internal (size %d)\n", depth*2+1, "-", num_keys);
     for (uint32_t i=0; i<num_keys; i++) {
       child = *internal_node_child(node, i);
       print_tree(p, child, depth+1);
-      printf("%*s key %d\n", depth*2, "-", *internal_node_key(node, i));
+      printf("%*s key %d\n", depth*2+1, "-", *internal_node_key(node, i));
     }
     child = *internal_node_right_child(node);
     print_tree(p, child, depth+1);
