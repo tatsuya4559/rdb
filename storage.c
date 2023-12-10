@@ -97,6 +97,7 @@ static void set_node_type(void *node, NodeType type) {
   *(NodeType *)(node + NODE_TYPE_OFFSET) = type;
 }
 
+// TODO: to private
 uint32_t *leaf_node_num_cells(void *node) {
   return node + LEAF_NODE_NUM_CELLS_OFFSET;
 }
@@ -105,6 +106,7 @@ static void *leaf_node_cell(void *node, uint32_t cell_num) {
   return node + LEAF_NODE_HEADER_SIZE + LEAF_NODE_CELL_SIZE * cell_num;
 }
 
+// TODO: to private
 uint32_t *leaf_node_key(void *node, uint32_t cell_num) {
   return leaf_node_cell(node, cell_num);
 }
@@ -222,7 +224,7 @@ static Pager *pager_open(const char *filename) {
   return pager;
 }
 
-uint32_t get_unused_page_num(Pager *p) {
+static uint32_t get_unused_page_num(Pager *p) {
   return p->num_pages;
 }
 
@@ -304,7 +306,7 @@ Cursor *table_start(Table *table) {
   return c;
 }
 
-Cursor *leaf_node_find(Table *table, uint32_t page_num, uint32_t key) {
+static Cursor *leaf_node_find(Table *table, uint32_t page_num, uint32_t key) {
   void *node = get_page(table->pager, page_num);
   uint32_t num_cells = *leaf_node_num_cells(node);
 
@@ -359,7 +361,7 @@ static uint32_t internal_node_find_child(void *node, uint32_t key) {
   return min_idx;
 }
 
-Cursor *internal_node_find(Table *table, uint32_t page_num, uint32_t key)  {
+static Cursor *internal_node_find(Table *table, uint32_t page_num, uint32_t key)  {
   void *node = get_page(table->pager, page_num);
   uint32_t child_idx = internal_node_find_child(node, key);
   uint32_t child_num = *internal_node_child(node, child_idx);
@@ -423,7 +425,7 @@ static void create_new_root(Table *table, uint32_t right_child_page_num) {
   *node_parent(right_child) = table->root_page_num;
 }
 
-void update_internal_node_key(void *node, uint32_t old_key, uint32_t new_key) {
+static void update_internal_node_key(void *node, uint32_t old_key, uint32_t new_key) {
   uint32_t old_child_idx = internal_node_find_child(node, old_key);
   *internal_node_key(node, old_child_idx) = new_key;
 }
