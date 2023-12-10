@@ -52,4 +52,4 @@ uint32_t *leaf_node_num_cells(void *node);
 uint32_t *leaf_node_key(void *node, uint32_t cell_num);
 
 void print_constants(void);
-void print_leaf_node(void *node);
+void print_tree(Pager *p, uint32_t page_num, uint32_t depth);
